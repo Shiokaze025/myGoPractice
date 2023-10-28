@@ -11,9 +11,3 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-//func main() {
-//	//http.HandleFunc("/", handler)
-//	http.HandleFunc("/view/", viewHandler)
-//	log.Fatal(http.ListenAndServe(":8080", nil))
-//}

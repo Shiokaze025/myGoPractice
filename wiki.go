@@ -12,17 +12,9 @@ type Page struct {
 	Body  []byte
 }
 
-func (p *Page) Save() error {
+func (p *Page) save() error {
 	filename := p.Title + ".txt"
 	return os.WriteFile(filename, p.Body, 0600)
-}
-
-func test1() {
-	p := Page{
-		"hi",
-		[]byte("hi, guys"),
-	}
-	_ = p.Save()
 }
 
 func loadPage(title string) (*Page, error) {
@@ -43,5 +35,6 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	test1()
+	http.HandleFunc("/view/", viewHandler)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
