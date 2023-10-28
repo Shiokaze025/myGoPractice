@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit</title>
+</head>
+<body>
+    <h1>Editing {{.Title}}</h1>
+
+    <form action="/save/{{.Title}}" method="POST">
+        <div>
+            <label>
+                <textarea name="body" rows="20" cols="80">
+                    {{printf "%s" .Body}}
+                </textarea>
+            </label>
+        </div>
+        <div>
+            <input type="submit" value="save">
+        </div>
+    </form>
+
+</body>
+</html>
