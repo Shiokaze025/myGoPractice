@@ -90,7 +90,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	errSave := p.save()
 	if errSave != nil {
 		// 给客户端返回错误
-		http.Error(w, errSave.Error(), http.StatusFound)
+		http.Error(w, err.Error(), http.StatusFound)
 		return
 	}
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
