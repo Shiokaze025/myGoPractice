@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log"
+	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
@@ -86,82 +84,53 @@ var bibs = []Bibliography{
 }
 
 // GET /bibs[?f=gbt] 获取所有参考文献，若指定 f=gbt 则格式化为GB/T 7714 格式
-func getBibs(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.Method, r.URL.String())
-	fomatter := r.URL.Query().Get("f")
+func getBibs(c *gin.Context) {
+	formatter, _ := c.GetQuery("f")
 
 	for i := 0; i < len(bibs); i++ {
-		bibs[i].Format(fomatter, i+1)
+		bibs[i].Format(formatter, i+1)
 	}
 
-	j, _ := json.MarshalIndent(bibs, "", "    ")
-	_, err := w.Write(j)
-	if err != nil {
-		return
-	}
+	c.IndentedJSON(http.StatusOK, bibs)
 }
 
 // POST /bibs 创建新的参考文献，添加到bibs
-func postBib(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.Method, r.URL.String())
-
+func postBib(c *gin.Context) {
 	var newBib Bibliography
 
-	body, _ := io.ReadAll(r.Body)
-
-	if err := json.Unmarshal(body, &newBib); err != nil {
+	err := c.Bind(&newBib)
+	if err != nil {
 		return
 	}
 
 	bibs = append(bibs, newBib)
 
-	j, _ := json.MarshalIndent(newBib, "", "   ")
+	c.IndentedJSON(http.StatusCreated, newBib)
 
-	_, err := w.Write(j)
-	if err != nil {
-		return
-	}
 }
 
 // GET /bibs/:id 获取指定 id 的一篇参考文献，若指定 f=gbt 则格式化为 GB/T 7714 格式
-func getBibByID(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Path[len("/bibs/"):]
-	formater := r.URL.Query().Get("f")
-
-	log.Println(r.Method, r.URL.String(), fmt.Sprintf("id=%v", id))
+func getBibByID(c *gin.Context) {
+	id := c.Param("id")
+	formatter, _ := c.GetQuery("f")
 
 	for i, b := range bibs {
 		if b.ID == id {
-			b.Format(formater, i+1)
-			j, _ := json.MarshalIndent(b, "", "  ")
-			w.Write(j)
+			b.Format(formatter, i+1)
+			c.IndentedJSON(http.StatusOK, b)
 			return
 		}
 	}
 
-	j, _ := json.MarshalIndent(
-		map[string]string{"message": "bib not found"},
-		"", "  ")
-
-	_, err := w.Write(j)
-	if err != nil {
-		return
-	}
-}
-
-func handleBibs(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		getBibs(w, r)
-	case http.MethodPost:
-		postBib(w, r)
-	}
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "bib not found"})
 }
 
 func main() {
-	http.HandleFunc("/bibs/", getBibByID)
-	http.HandleFunc("/bibs", handleBibs)
+	router := gin.Default()
 
-	log.Fatal(
-		http.ListenAndServe("localhost:8080", nil))
+	router.GET("/bibs", getBibs)
+	router.GET("/bibs/:id", getBibByID)
+	router.POST("/bibs", postBib)
+
+	router.Run("localhost:8080")
 }
